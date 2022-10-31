@@ -84,9 +84,12 @@ def get_location():
                 info_dict["alt"] = tokens[9]
                 # return dictionary
                 return info_dict
+def main():
+    while True:
+        pos=get_location()
+        print_gps(pos)
+        print("----------------------------------------")
+        time.sleep(1)
 
-while True:
-    pos=get_location()
-    print_gps(pos)
-    print("----------------------------------------")
-    time.sleep(1)
+if __name__=="__main__":
+    main()

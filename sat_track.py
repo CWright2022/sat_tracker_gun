@@ -43,11 +43,32 @@ def get_az_and_alt(satellite, obs_lat, obs_long):
     return az_alt_dict
 
 
+def convert_to_dd(angle):
+    '''helper function to convert string for az or altto decimal'''
+    string = str(angle)
+    d_index = string.index("d")
+    tokens = string.split()
+    deg = float(tokens[0][:d_index])
+    mins = float(tokens[1][:-1])
+    secs = float(tokens[2][:-1])
+    print(deg, mins, secs)
+    if deg < 0:
+        decimal = deg - (mins/60) - secs/3600
+    else:
+        decimal = deg + (mins/60) + secs/3600
+    return decimal
+
+
 satellite = create_satellite(FILE)
 
 sat_info_dict = get_az_and_alt(satellite, OBSERVER_LAT, OBSERVER_LONG)
 
-print('Altitude:', sat_info_dict["altitude"])
-print('Azimuth:', sat_info_dict["azimuth"])
+altitude = sat_info_dict["altitude"]
+azimuth = sat_info_dict["azimuth"]
+altitude = convert_to_dd(altitude)
+azimuth = convert_to_dd(azimuth)
+
+print('Altitude:', altitude)
+print('Azimuth:', azimuth)
 # print('Distance: {:.1f} km'.format(distance.km))
-# print("NOW: ",ts.now())
+
