@@ -1,3 +1,11 @@
+'''
+SATELLITE TRACKING MODULE
+this module tracks satellites
+main functions of use:
+
+'''
+
+from lib2to3.pytree import convert
 from skyfield.api import EarthSatellite, load, wgs84
 
 FILE = "tle.txt"
@@ -5,7 +13,6 @@ OBSERVER_LAT = 43.083799
 OBSERVER_LONG = -77.680247
 
 ts = load.timescale()
-time = ts.now()
 
 
 def create_satellite(file):
@@ -22,7 +29,7 @@ def create_satellite(file):
     return satellite
 
 
-def get_az_and_alt(satellite, obs_lat, obs_long):
+def get_az_and_alt(satellite, obs_lat, obs_long, time):
     '''
     given an EarthSatellite object and observer latitude and longitude,
     will return a dictionary with 3 keys "azimuth"  "altitude" and "distance"
@@ -59,16 +66,27 @@ def convert_to_dd(angle):
     return decimal
 
 
-satellite = create_satellite(FILE)
+def get_sat_bearings(file, lat, long, time):
+    '''
+    the best function ever - returns a dictionary with "azimuth", "altitude", and "range"
+    azimuth and altitude in degrees, range in km
+    '''
+    # NEED TO CREATE UTC TIMESTAMP HERE
 
-sat_info_dict = get_az_and_alt(satellite, OBSERVER_LAT, OBSERVER_LONG)
+    # create satellite
+    satellite = create_satellite(file)
+    # get az and alt
+    sat_info_dict = get_az_and_alt(satellite, lat, long)
+    # formatting/converting
+    sat_info_dict["altitude"] = convert_to_dd(sat_info_dict["altitude"])
+    sat_info_dict["azimuth"] = convert_to_dd(sat_info_dict["azimuth"])
+    sat_info_dict["distance"] = sat_info_dict["distance"].km
 
-altitude = sat_info_dict["altitude"]
-azimuth = sat_info_dict["azimuth"]
-altitude = convert_to_dd(altitude)
-azimuth = convert_to_dd(azimuth)
+    return sat_info_dict
 
-print('Altitude:', altitude)
-print('Azimuth:', azimuth)
-# print('Distance: {:.1f} km'.format(distance.km))
+# print('Altitude:', altitude)
+# print('Azimuth:', azimuth)
+# print('Distance:', distance)
 
+
+print(get_sat_bearings("tle.txt", 43.083953, -77.674164, ))

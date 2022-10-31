@@ -1,7 +1,23 @@
+'''
+GPS MODULE
+this module interacts with the GPS module
+main functions to keep in mind:
+gps.set_port(PORT) - sets port to whatever you want (default is COM7)
+gps.get_location() - returns None until GPS has a valid fix, then returns a big dictionary of info
+'''
+
 import serial
-import time
+
+#default port
 PORT = "COM7"
 
+def set_port(port):
+    '''
+    sets global PORT to parameter port
+    used for setting port from other files
+    '''
+    global PORT
+    PORT=port
 
 def interpret_lat_and_long(lat, lat_direction, long, long_direction):
     '''
@@ -23,20 +39,6 @@ def interpret_lat_and_long(lat, lat_direction, long, long_direction):
         long_decimal = long_decimal*-1
     # return values
     return lat_decimal, long_decimal
-
-def print_gps(location_dict):
-    '''
-    helper function to easily print out the data from GPS in a neat format
-    '''
-    if location_dict is None:
-        print("No valid fix or GPS not attached")
-    else:
-        print("LATITUDE: "+str(location_dict["lat"]))
-        print("LONGITUDE: "+str(location_dict["long"]))
-        print("TIME: "+str(location_dict["time"]))
-        print("SATS: "+str(location_dict["sats"]))
-        print("ALTITUDE: "+str(location_dict["alt"]))
-
 
 def get_location():
     '''
@@ -84,12 +86,3 @@ def get_location():
                 info_dict["alt"] = tokens[9]
                 # return dictionary
                 return info_dict
-def main():
-    while True:
-        pos=get_location()
-        print_gps(pos)
-        print("----------------------------------------")
-        time.sleep(1)
-
-if __name__=="__main__":
-    main()
