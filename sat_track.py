@@ -1,0 +1,53 @@
+from skyfield.api import EarthSatellite, load, wgs84
+
+FILE = "tle.txt"
+OBSERVER_LAT = 43.083799
+OBSERVER_LONG = -77.680247
+
+ts = load.timescale()
+time = ts.now()
+
+
+def create_satellite(file):
+    '''
+    creates an EarthSatellite object given a TLE and which "number" satellite to start at
+    '''
+    # open file and read it
+    with open(FILE) as file:
+        name = next(file)
+        tle_1 = next(file)
+        tle_2 = next(file)
+    # create ts object
+    satellite = EarthSatellite(tle_1, tle_2, name, ts)
+    return satellite
+
+
+def get_az_and_alt(satellite, obs_lat, obs_long):
+    '''
+    given an EarthSatellite object and observer latitude and longitude,
+    will return a dictionary with 3 keys "azimuth"  "altitude" and "distance"
+    '''
+    # create observer location object thing
+    observer_loc = wgs84.latlon(obs_lat, obs_long)
+    # get difference between satellite and observer locations
+    difference = satellite - observer_loc
+    # idk how this works
+    topocentric = difference.at(time)
+    # actually get altitude, azimuth, and distance
+    alt, az, distance = topocentric.altaz()
+    # create dict to return
+    az_alt_dict = {}
+    az_alt_dict["altitude"] = alt
+    az_alt_dict["azimuth"] = az
+    az_alt_dict["distance"] = distance
+    return az_alt_dict
+
+
+satellite = create_satellite(FILE)
+
+sat_info_dict = get_az_and_alt(satellite, OBSERVER_LAT, OBSERVER_LONG)
+
+print('Altitude:', sat_info_dict["altitude"])
+print('Azimuth:', sat_info_dict["azimuth"])
+# print('Distance: {:.1f} km'.format(distance.km))
+# print("NOW: ",ts.now())
