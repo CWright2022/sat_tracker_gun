@@ -1,4 +1,3 @@
-from turtle import position
 import serial
 import time
 PORT = "COM7"
