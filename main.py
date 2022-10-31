@@ -1,5 +1,6 @@
+from turtle import position
 import serial
-
+import time
 PORT = "COM7"
 
 
@@ -24,6 +25,19 @@ def interpret_lat_and_long(lat, lat_direction, long, long_direction):
     # return values
     return lat_decimal, long_decimal
 
+def print_gps(location_dict):
+    '''
+    helper function to easily print out the data from GPS in a neat format
+    '''
+    if location_dict is None:
+        print("No valid fix or GPS not attached")
+    else:
+        print("LATITUDE: "+str(location_dict["lat"]))
+        print("LONGITUDE: "+str(location_dict["long"]))
+        print("TIME: "+str(location_dict["time"]))
+        print("SATS: "+str(location_dict["sats"]))
+        print("ALTITUDE: "+str(location_dict["alt"]))
+
 
 def get_location():
     '''
@@ -34,6 +48,12 @@ def get_location():
     "time" - UTC time
     "sats" - number of sats in view
     '''
+    try:
+        ser = serial.Serial(PORT, 4800, timeout=1)
+        ser.close()
+    except:
+        return None
+
     # initialize serial object
     with serial.Serial(PORT, 4800, timeout=1) as ser:
         # do this until we get a valid fix
@@ -66,5 +86,8 @@ def get_location():
                 # return dictionary
                 return info_dict
 
-
-print(get_location())
+while True:
+    pos=get_location()
+    print_gps(pos)
+    print("----------------------------------------")
+    time.sleep(1)
