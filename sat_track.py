@@ -5,7 +5,6 @@ main functions of use:
 
 '''
 
-from lib2to3.pytree import convert
 from skyfield.api import EarthSatellite, load, wgs84
 
 FILE = "tle.txt"
