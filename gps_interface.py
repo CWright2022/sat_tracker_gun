@@ -2,10 +2,12 @@
 GPS MODULE
 this module provides an object to interact with the GPS module
 main functions to keep in mind:
+Cayden Wright November 2022
 '''
 
 import serial
 import datetime
+from skyfield.api import utc
 
 
 class GPS_module:
@@ -41,7 +43,7 @@ class GPS_module:
                     # datetime (using python datetime object)
                     hour, minute, second = interpret_time_or_date(tokens[1])
                     day, month, year = interpret_time_or_date(tokens[9])
-                    self.__date = datetime.datetime(year+2000, month, day, hour, minute, second)
+                    self.__datetime = datetime.datetime(year+2000, month, day, hour, minute, second,tzinfo=utc)
                     #lat and long
                     raw_lat, lat_direction = tokens[3], tokens[4]
                     raw_long, long_direction = tokens[5], tokens[6]
@@ -56,11 +58,8 @@ class GPS_module:
     def longitude(self):
         return self.__long
 
-    def time(self):
-        return self.__time
-
-    def date(self):
-        return self.__date
+    def datetime(self):
+        return self.__datetime
 
 
 def interpret_lat_long(lat, lat_direction, long, long_direction):

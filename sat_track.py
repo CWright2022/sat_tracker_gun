@@ -3,9 +3,7 @@ SATELLITE TRACKING MODULE
 this module tracks satellites
 '''
 
-from skyfield.api import EarthSatellite, load, wgs84, utc
-
-import datetime
+from skyfield.api import EarthSatellite, load, wgs84
 
 ts = load.timescale()
 
@@ -26,7 +24,7 @@ class Satellite:
         self.__sat_obj=satellite
 
 
-    def recalculate(self, obs_lat, obs_long, time_obj):
+    def recalculate(self, obs_lat, obs_long, datetime_obj):
         '''
         given an EarthSatellite object and observer latitude and longitude,
         will return a dictionary with 3 keys "azimuth"  "altitude" and "distance"
@@ -34,7 +32,7 @@ class Satellite:
         # create observer location object thing
         observer_loc = wgs84.latlon(obs_lat, obs_long)
         #create timescale thing
-        time=ts.from_datetime(time_obj)
+        time=ts.from_datetime(datetime_obj)
         # get difference between satellite and observer locations
         difference = self.__sat_obj - observer_loc
         # idk how this works
