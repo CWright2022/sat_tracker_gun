@@ -8,11 +8,11 @@ import serial
 import datetime
 
 
-class gps_module:
+class GPS_module:
     '''
     class to represent the GPS module
     '''
-    __slots__ = ["__port", "__lat", "__long", "__date", "__time"]
+    __slots__ = ["__port", "__lat", "__long", "__datetime"]
 
     def __init__(self, port):
         self.__port = port
@@ -38,12 +38,10 @@ class gps_module:
                     # check validity of fix
                     if tokens[2] != "A":
                         return False
-                    # time (using python datetime object)
-                    hours, minutes, seconds = interpret_time_or_date(tokens[1])
-                    self.__time = datetime.time(hours, minutes, seconds)
-                    # date (using datetime object)
+                    # datetime (using python datetime object)
+                    hour, minute, second = interpret_time_or_date(tokens[1])
                     day, month, year = interpret_time_or_date(tokens[9])
-                    self.__date = datetime.date(year+2000, month, day)
+                    self.__date = datetime.datetime(year+2000, month, day, hour, minute, second)
                     #lat and long
                     raw_lat, lat_direction = tokens[3], tokens[4]
                     raw_long, long_direction = tokens[5], tokens[6]
