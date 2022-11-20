@@ -2,7 +2,6 @@
 SATELLITE TRACKING MODULE
 this module tracks satellites
 main functions of use:
-
 '''
 
 from skyfield.api import EarthSatellite, load, wgs84
@@ -72,6 +71,7 @@ def get_sat_bearings(file, lat, long, time):
     '''
     # NEED TO CREATE UTC TIMESTAMP HERE
 
+    
     # create satellite
     satellite = create_satellite(file)
     # get az and alt

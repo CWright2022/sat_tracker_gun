@@ -1,25 +1,77 @@
 '''
 GPS MODULE
-this module interacts with the GPS module
+this module provides an object to interact with the GPS module
 main functions to keep in mind:
-gps.set_port(PORT) - sets port to whatever you want (default is COM7)
-gps.get_location() - returns None until GPS has a valid fix, then returns a big dictionary of info
 '''
 
 import serial
 
-#default port
-PORT = "COM7"
 
-def set_port(port):
+class gps_module:
     '''
-    sets global PORT to parameter port
-    used for setting port from other files
+    class to represent the GPS module
     '''
-    global PORT
-    PORT=port
 
-def interpret_lat_and_long(lat, lat_direction, long, long_direction):
+    __slots__ = ["__port"]
+
+    def __init__(self, port):
+        self.__port = port
+
+    def read_data(self, sentence="$GPRMC"):
+        '''
+        helper function to read any field from the GPRMC sentence
+        '''
+        with serial.Serial(self.__port, 4800, timeout=1) as ser:
+            while True:
+                # read line, decode line, split line into fields
+                line = ser.readline()
+                line = line.decode('UTF-8')
+                tokens = line.split(",")
+                # if it's the line we want,
+                if tokens[0] == sentence:
+                    # check validity of fix
+                    if tokens[2] != "A":
+                        return None
+                    return tokens
+
+    def get_date(self):
+        '''
+        returns a tuple with UTC day, month, and year (dd,mm,yyyy)
+        '''
+        data = self.read_data()
+        date = data[9]
+        day = date[:2]
+        month = date[2:4]
+        # only works for years from 2000-2099 unfortunately
+        year = "20"+date[4:]
+        return day, month, year
+
+    def get_time(self):
+        '''
+        returns a tuple with hours, minutes, and seconds UTC (hh,mm,ss)
+        '''
+        data = self.read_data()
+        time = data[1]
+        hours = time[:2]
+        minutes = time[2:4]
+        seconds = time[4:]
+        return hours, minutes, seconds
+
+    def get_lat_long(self):
+        '''
+        returns a tuple with decimal form of latitude and longitude
+        '''
+        data = self.read_data()
+        lat_raw = data[3]
+        lat_direction = data[4]
+
+        long_raw = data[5]
+        long_direction = data[6]
+        lat, long = interpret_lat_long(lat_raw, lat_direction, long_raw, long_direction)
+        return lat, long
+
+
+def interpret_lat_long(lat, lat_direction, long, long_direction):
     '''
     helper function to interpret lat and long
     given a raw string from the GPS, will return the lat and long in decimal format
@@ -40,49 +92,10 @@ def interpret_lat_and_long(lat, lat_direction, long, long_direction):
     # return values
     return lat_decimal, long_decimal
 
-def get_location():
-    '''
-    returns a dictionary with info from GPS if valid, otherwise returns None.
-    "lat" - latitude in decimal format
-    "long" - longitude in decimal format
-    "alt" - altidude, meters above mean sea level
-    "time" - UTC time
-    "sats" - number of sats in view
-    '''
-    try:
-        ser = serial.Serial(PORT, 4800, timeout=1)
-        ser.close()
-    except:
-        return None
 
-    # initialize serial object
-    with serial.Serial(PORT, 4800, timeout=1) as ser:
-        # do this until we get a valid fix
-        while True:
-            # read line, decode line, split line into fields
-            line = ser.readline()
-            line = line.decode('UTF-8')
-            tokens = line.split(",")
-            # if it's the line we want,
-            if tokens[0] == "$GPGGA":
-                # if fix is not ok, then return None
-                if int(tokens[6]) != 1 and tokens[6] != 2:
-                    return None
-                # create dictionary to return
-                info_dict = {}
-                # get time
-                info_dict["time"] = tokens[1]
-                # get latitude and longitude
-                lat = tokens[2]
-                lat_direction = tokens[3]
-                long = tokens[4]
-                long_direction = tokens[5]
-                lat, long = interpret_lat_and_long(lat, lat_direction, long, long_direction)
-                info_dict["lat"] = lat
-                info_dict["long"] = long
-                # get number of sats
-                info_dict["sats"] = tokens[7]
-                # get altitude
-                info_dict["alt"] = tokens[9]
-                # return dictionary
-                return info_dict
+gps = gps_module("COM7")
+print(gps.get_date())
+print(gps.get_time())
+lat, long = gps.get_lat_long()
+print("LATITUDE: "+str(lat))
+print("LONGITUDE: "+str(long))
