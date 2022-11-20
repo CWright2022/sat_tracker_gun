@@ -4,7 +4,7 @@ import sat_track
 main file for sat tracker gun
 Cayden Wright 11/19/22
 '''
-gps = gps_interface.GPS_module("COM7")
+gps = gps_interface.GPS_module("/dev/ttyACM0")
 satellite = sat_track.Satellite("tle.txt")
 while True:
     if gps.refresh():
