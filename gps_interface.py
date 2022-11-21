@@ -43,7 +43,7 @@ class GPS_module:
                     # datetime (using python datetime object)
                     hour, minute, second = interpret_time_or_date(tokens[1])
                     day, month, year = interpret_time_or_date(tokens[9])
-                    self.__datetime = datetime.datetime(year+2000, month, day, hour, minute, second,tzinfo=utc)
+                    self.__datetime = datetime.datetime(year+2000, month, day, hour, minute, second, tzinfo=utc)
                     #lat and long
                     raw_lat, lat_direction = tokens[3], tokens[4]
                     raw_long, long_direction = tokens[5], tokens[6]
