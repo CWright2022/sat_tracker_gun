@@ -6,6 +6,7 @@ import tkinter as tk
 import gps_interface
 import sat_track
 import threading
+import os
 
 # universal preferences
 BG_COLOR = "black"
@@ -30,7 +31,7 @@ except IndexError:
 
 # root
 root = tk.Tk()
-root.attributes('-fullscreen', False)
+root.attributes('-fullscreen', True)
 
 # MAIN SCREEN -------------------------
 main_screen = tk.Frame(root, bg=BG_COLOR)
@@ -44,12 +45,22 @@ choose_sat_button = tk.Button(
     font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
     command=lambda: goto_sat_chooser(choose_sat_button)
 )
-exit_button = tk.Button(main_screen, text="Quit", font=FONT_1, command=exit, fg=FG_COLOR, bg=BUTTON_BG_COLOR)
+options_button = tk.Button(main_screen,
+                           text="Options",
+                           font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+                           command=lambda: goto_options_screen(options_button)
+                           )
+exit_button = tk.Button(main_screen,
+                        text="Quit",
+                        font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+                        command=exit
+                        )
 
 # pack main screen elements
 azimuth.pack()
 elevation.pack()
 choose_sat_button.pack()
+options_button.pack()
 exit_button.pack()
 
 # SATELLITE CHOOSER SCREEN-------------
@@ -57,15 +68,41 @@ sat_chooser_screen = tk.Frame(root, bg=BG_COLOR)
 
 # sat chooser sceen elements
 title = tk.Label(sat_chooser_screen, text="Choose Satellite", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
-cancel_button = tk.Button(
+cancel_button_sat_chooser = tk.Button(
     sat_chooser_screen,
     text="Cancel", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
-    command=lambda: goto_main_screen(cancel_button)
+    command=lambda: goto_main_screen(cancel_button_sat_chooser)
 )
 
 # pack sat chooser_elements
 title.pack()
-cancel_button.pack()
+cancel_button_sat_chooser.pack()
+
+# OPTIONS MENU SCREEN -----
+options_screen = tk.Frame(root, bg=BG_COLOR)
+
+# options menu items
+shutdown_button = tk.Button(
+    options_screen,
+    text="Shut Down", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+    command=lambda: os.system("shutdown now -h")
+)
+recalibrate_button = tk.Button(
+    options_screen,
+    text="Recalibrate IMU", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+    # TODO:actually make this recalibrate the imu
+    command=lambda: print("recalibrate me!")
+)
+cancel_button_options_menu = tk.Button(
+    options_screen,
+    text="Cancel", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+    command=lambda: goto_main_screen(cancel_button_options_menu)
+
+)
+# packing items
+shutdown_button.pack()
+recalibrate_button.pack()
+cancel_button_options_menu.pack()
 
 
 def goto_sat_chooser(current_obj):
@@ -81,9 +118,13 @@ def goto_sat_chooser(current_obj):
 
 
 def goto_main_screen(current_obj):
-
     current_obj.master.pack_forget()
     main_screen.pack()
+
+
+def goto_options_screen(current_obj):
+    current_obj.master.pack_forget()
+    options_screen.pack()
 
 
 def start_calculations():
