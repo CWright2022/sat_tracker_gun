@@ -50,6 +50,9 @@ class Satellite:
     def distance(self):
         return self.__distance
 
+    def get_tle_tuple(self):
+        return self.__tle_tuple
+
 
 def convert_to_dd(angle):
     '''helper function to convert string for az or altto decimal'''

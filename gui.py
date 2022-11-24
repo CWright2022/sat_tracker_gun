@@ -18,20 +18,11 @@ FONT_1 = ("System", 32)
 # gps = gps_interface.GPS_module("/dev/ttyACM0")
 gps = gps_interface.GPS_module("COM7")
 
-# just testing with ISS for now)
-# CURRENT_SATELLITE = sat_track.Satellite((
-#     "(ISS(ZARYA)",
-#     "1 25544U 98067A   22327.90527235  .00009819  00000-0  17866-3 0  9997",
-#     "2 25544  51.6440 265.3611 0007058 106.6963   0.9885 15.50170803369959"
-# ))
-try:
-    CURRENT_SATELLITE = sat_track.Satellite(())
-except IndexError:
-    CURRENT_SATELLITE = None
+CURRENT_SATELLITE = None
 
 # root
 root = tk.Tk()
-root.attributes('-fullscreen', True)
+root.attributes('-fullscreen', False)
 
 # MAIN SCREEN -------------------------
 main_screen = tk.Frame(root, bg=BG_COLOR)
@@ -71,7 +62,7 @@ title = tk.Label(sat_chooser_screen, text="Choose Satellite", font=FONT_1, fg=FG
 cancel_button_sat_chooser = tk.Button(
     sat_chooser_screen,
     text="Cancel", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
-    command=lambda: goto_main_screen(cancel_button_sat_chooser)
+    command=lambda: set_current_satellite(None)
 )
 
 # pack sat chooser_elements
@@ -152,7 +143,7 @@ def start_calculations():
 
 
 # this is so dirty but the only way I know how
-SAT_CHOOSER_BUTTONS = []
+SAT_CHOOSER_BUTTONS = {}
 
 
 def generate_tle_buttons(tle_file):
@@ -160,31 +151,28 @@ def generate_tle_buttons(tle_file):
     generates up to 5 (?) buttons, each one will set the currently tracked satellite
     '''
     # create a dictionary, name of sat:tuple with TLE data (name,1,2)
-    button_dict = {}
+    global SAT_CHOOSER_BUTTONS
     with open(tle_file) as tle_file:
         number_of_sats = 0
         for line in tle_file:
             if number_of_sats == 5:
                 break
             if line[0] != 1 and line[0] != 2 and line[0] != "\n":
-                button_dict[line.strip()] = (line.strip(), next(tle_file).strip(), next(tle_file).strip())
+                SAT_CHOOSER_BUTTONS[line.strip()] = (line.strip(), next(tle_file).strip(), next(tle_file).strip())
                 number_of_sats += 1
-
-    button_list = []
-    for key in button_dict:
+    # for every key in the dictionary, convert the value to a button
+    for key in SAT_CHOOSER_BUTTONS:
+        sat_tuple = SAT_CHOOSER_BUTTONS[key]
         button = tk.Button(sat_chooser_screen,
                            text=key,
                            font=FONT_1,
                            fg=FG_COLOR,
                            bg=BUTTON_BG_COLOR,
-                           command=lambda: set_current_satellite(sat_track.Satellite(button_dict[key]))
+                           command=lambda sat_tuple=sat_tuple: set_current_satellite(sat_tuple)
                            )
-        button_list.append(button)
-    for button in button_list:
+
+        SAT_CHOOSER_BUTTONS[key] = button
         button.pack()
-    # ew, i feel so gross doing this
-    global SAT_CHOOSER_BUTTONS
-    SAT_CHOOSER_BUTTONS = button_list
 
 
 def set_current_satellite(sat_tuple):
@@ -193,9 +181,15 @@ def set_current_satellite(sat_tuple):
     and exit the sat chooser screen
     '''
     global CURRENT_SATELLITE
-    CURRENT_SATELLITE = sat_tuple
-    for button in SAT_CHOOSER_BUTTONS:
-        button.pack_forget()
+    global SAT_CHOOSER_BUTTONS
+    # set variable
+    if sat_tuple is not None:
+        CURRENT_SATELLITE = sat_track.Satellite(sat_tuple)
+    else:
+        CURRENT_SATELLITE = None
+    # close sat_chooser and go to main
+    for key in SAT_CHOOSER_BUTTONS:
+        SAT_CHOOSER_BUTTONS[key].pack_forget()
     sat_chooser_screen.pack_forget()
     main_screen.pack()
 
