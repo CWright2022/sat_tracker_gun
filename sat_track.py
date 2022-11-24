@@ -10,17 +10,13 @@ ts = load.timescale()
 
 
 class Satellite:
-    __slots__ = ["__tle_file", "__azimuth", "__elevation", "__sat_obj", "__distance"]
+    __slots__ = ["__tle_tuple", "__azimuth", "__elevation", "__sat_obj", "__distance"]
 
-    def __init__(self, tle_file):
-        self.__tle_file = tle_file
-        self.parse_tle()
-
-    def parse_tle(self):
-        with open(self.__tle_file) as file:
-            name = next(file)
-            tle_1 = next(file)
-            tle_2 = next(file)
+    def __init__(self, tle_tuple):
+        self.__tle_tuple = tle_tuple
+        name = self.__tle_tuple[0]
+        tle_1 = self.__tle_tuple[1]
+        tle_2 = self.__tle_tuple[2]
         # create ts object
         satellite = EarthSatellite(tle_1, tle_2, name, ts)
         self.__sat_obj = satellite
@@ -35,11 +31,11 @@ class Satellite:
         # create timescale thing
         time = ts.from_datetime(datetime_obj)
         # get difference between satellite and observer locations
-        difference = self.__sat_obj - observer_loc
+        difference = self.__sat_obj - observer_loc  # type: ignore
         # idk how this works
         topocentric = difference.at(time)
         # actually get altitude, azimuth, and distance
-        elevation, azimuth, distance = topocentric.altaz()
+        elevation, azimuth, distance = topocentric.altaz()  # type: ignore
         # set values
         self.__elevation = convert_to_dd(elevation)
         self.__azimuth = convert_to_dd(azimuth)
