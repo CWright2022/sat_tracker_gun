@@ -22,7 +22,9 @@ CURRENT_SATELLITE = None
 
 # root
 root = tk.Tk()
-root.attributes('-fullscreen', False)
+root.attributes('-fullscreen', True)
+# root.grid_rowconfigure(0, weight=1)
+# root.grid_columnconfigure(0, weight=1)
 
 # MAIN SCREEN -------------------------
 main_screen = tk.Frame(root, bg=BG_COLOR)
@@ -30,6 +32,7 @@ main_screen = tk.Frame(root, bg=BG_COLOR)
 # main screen elements
 azimuth = tk.Label(main_screen, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
 elevation = tk.Label(main_screen, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
+range = tk.Label(main_screen, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
 choose_sat_button = tk.Button(
     main_screen,
     text="Choose Satellite",
@@ -47,12 +50,13 @@ exit_button = tk.Button(main_screen,
                         command=exit
                         )
 
-# pack main screen elements
-azimuth.pack()
-elevation.pack()
-choose_sat_button.pack()
-options_button.pack()
-exit_button.pack()
+# pack and  place main screen elements
+azimuth.place(relx=0.5, rely=0.5, anchor="s")
+elevation.place(relx=0.5, rely=0.5, anchor="n")
+choose_sat_button.place(relx=0, rely=0, anchor="nw")
+options_button.place(relx=1, rely=1, anchor="se")
+exit_button.place(relx=0.5, rely=1, anchor="s")
+range.place(relx=1, rely=0, anchor="ne")
 
 # SATELLITE CHOOSER SCREEN-------------
 sat_chooser_screen = tk.Frame(root, bg=BG_COLOR)
@@ -76,7 +80,8 @@ options_screen = tk.Frame(root, bg=BG_COLOR)
 shutdown_button = tk.Button(
     options_screen,
     text="Shut Down", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
-    command=lambda: os.system("shutdown now -h")
+    # command=lambda: os.system("shutdown now -h")
+    command=lambda: print("shut down!")
 )
 recalibrate_button = tk.Button(
     options_screen,
@@ -103,38 +108,40 @@ def goto_sat_chooser(current_obj):
     # destroy current frame (master of object)
     current_obj.master.pack_forget()
     # show sat chooser_screen
-    sat_chooser_screen.pack()
+    sat_chooser_screen.pack(fill="both", expand=True)
     # generate buttons
     generate_tle_buttons("./tle.txt")
 
 
 def goto_main_screen(current_obj):
     current_obj.master.pack_forget()
-    main_screen.pack()
+    main_screen.pack(fill="both", expand=True)
 
 
 def goto_options_screen(current_obj):
     current_obj.master.pack_forget()
-    options_screen.pack()
+    options_screen.pack(fill="both", expand=True)
 
 
 def start_calculations():
     '''
     starts recalculating satellite alt/azimuth
     '''
-    azimuth_text = ""
-    elevation_text = ""
     # if successful, recalculate and update text
     if gps.refresh() and CURRENT_SATELLITE != None:
         CURRENT_SATELLITE.recalculate(gps.latitude(), gps.longitude(), gps.datetime())
         azimuth_text = "Azimuth: "+str(round(CURRENT_SATELLITE.azimuth(), 2))
         elevation_text = "Elevation: "+str(round(CURRENT_SATELLITE.elevation(), 2))
+        distance = CURRENT_SATELLITE.distance().km
+        range_text = "Range: \n"+str(round(distance, 2))+"km"  # type:ignore
     else:
-        azimuth_text = "Azimuth: None"
-        elevation_text = "Elevation: None"
+        azimuth_text = ""
+        elevation_text = ""
+        range_text = ""
     # actually set text
     azimuth.config(text=azimuth_text)
     elevation.config(text=elevation_text)
+    range.config(text=range_text)
 
     # have this function call itself once every second in the background
     thread_obj = threading.Timer(1, start_calculations)
@@ -148,14 +155,14 @@ SAT_CHOOSER_BUTTONS = {}
 
 def generate_tle_buttons(tle_file):
     '''
-    generates up to 5 (?) buttons, each one will set the currently tracked satellite
+    generates up to 7 (?) buttons, each one will set the currently tracked satellite
     '''
     # create a dictionary, name of sat:tuple with TLE data (name,1,2)
     global SAT_CHOOSER_BUTTONS
     with open(tle_file) as tle_file:
         number_of_sats = 0
         for line in tle_file:
-            if number_of_sats == 5:
+            if number_of_sats == 7:
                 break
             if line[0] != 1 and line[0] != 2 and line[0] != "\n":
                 SAT_CHOOSER_BUTTONS[line.strip()] = (line.strip(), next(tle_file).strip(), next(tle_file).strip())
@@ -189,15 +196,15 @@ def set_current_satellite(sat_tuple):
         CURRENT_SATELLITE = None
     # close sat_chooser and go to main
     for key in SAT_CHOOSER_BUTTONS:
-        SAT_CHOOSER_BUTTONS[key].pack_forget()
+        SAT_CHOOSER_BUTTONS[key].place_forget()
     sat_chooser_screen.pack_forget()
-    main_screen.pack()
+    main_screen.pack(fill="both", expand=True)
 
 
 # start recalculating
 start_calculations()
 # start on main screen
-main_screen.pack()
+main_screen.pack(fill="both", expand=True)
 
 # root mainloop
 root.mainloop()
