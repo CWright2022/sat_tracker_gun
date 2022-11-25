@@ -7,6 +7,8 @@ import gps_interface
 import sat_track
 import threading
 import os
+from PIL import Image, ImageTk
+import time
 
 # universal preferences
 BG_COLOR = "black"
@@ -29,35 +31,42 @@ root.attributes('-fullscreen', True)
 # MAIN SCREEN -------------------------
 main_screen = tk.Frame(root, bg=BG_COLOR)
 
+# crosshairs
+root.update()
+window_height = root.winfo_height()
+crosshairs_raw = Image.open("./assets/crosshairs.png")
+crosshairs_raw = crosshairs_raw.resize((window_height, window_height), Image.Resampling.NEAREST)
+crosshairs = ImageTk.PhotoImage(crosshairs_raw)
+crosshairs_label = tk.Label(main_screen, image=crosshairs)
+
 # satellite parameters
 azimuth = tk.Label(main_screen, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
 elevation = tk.Label(main_screen, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
 range = tk.Label(main_screen, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
+
 # sat chooser
 choose_sat_button = tk.Label(main_screen, text="TARGET:\nNO TARGET", font=FONT_1, fg="red", bg=BG_COLOR)
 choose_sat_button.bind("<Button-1>", lambda _: goto_sat_chooser(choose_sat_button))
+
 # options
 options_button = tk.Label(main_screen, text="OPTIONS", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
 options_button.bind("<Button-1>", lambda _: goto_options_screen(options_button))
+
 # record button
 record_status = tk.Label(main_screen, text="SDR READY", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
 record_status.bind("<Button-1>", lambda _: toggle_recording())
-# but not this one
-exit_button = tk.Button(main_screen,
-                        text="QUIT",
-                        font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
-                        command=exit
-                        )
 
 
 # pack and  place main screen elements
+crosshairs_label.place(relx=0.5, rely=0.5, anchor="center")
 azimuth.place(relx=0.5, rely=0.5, anchor="s")
 elevation.place(relx=0.5, rely=0.5, anchor="n")
 choose_sat_button.place(relx=0, rely=0, anchor="nw")
 options_button.place(relx=1, rely=1, anchor="se")
-exit_button.place(relx=0.5, rely=1, anchor="s")
+# exit_button.place(relx=0.5, rely=1, anchor="s")
 range.place(relx=1, rely=0, anchor="ne")
 record_status.place(relx=0, rely=1, anchor="sw")
+
 
 # SATELLITE CHOOSER SCREEN-------------
 sat_chooser_screen = tk.Frame(root, bg=BG_COLOR)
@@ -82,13 +91,14 @@ shutdown_button = tk.Button(
     options_screen,
     text="SHUT DOWN", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
     # command=lambda: os.system("shutdown now -h")
-    command=lambda: print("shut down!")
+    # command=lambda: print("shut down!")
+    command=exit
 )
 recalibrate_button = tk.Button(
     options_screen,
-    text="RECALIBRATE IMU", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
-    # TODO:actually make this recalibrate the imu
-    command=lambda: print("recalibrate me!")
+    text="RECALIBRATE SENSORS", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+    # command=lambda: goto_gps_init_screen(recalibrate_button)
+    command=lambda: print("recalibrate!")
 )
 cancel_button_options_menu = tk.Button(
     options_screen,
@@ -100,6 +110,22 @@ cancel_button_options_menu = tk.Button(
 shutdown_button.pack()
 recalibrate_button.pack()
 cancel_button_options_menu.pack()
+
+
+def wait_for_gps(element):
+    number_of_dots = 0
+    while not gps.refresh():
+        new_text = "WAITING FOR GPS FIX"+("."*number_of_dots)
+        element.config(text=new_text)
+        number_of_dots += 1
+        time.sleep(1)
+        print(number_of_dots)
+        if number_of_dots > 3:
+            number_of_dots = 0
+            element.place_forget()
+            element.master.update()
+            # this line bypasses gps fix, for testing only
+            break
 
 
 def goto_sat_chooser(current_obj):
@@ -225,9 +251,14 @@ def toggle_recording():
         CURRENTLY_RECORDING = True
 
 
+def calibrate_imu(current_obj):
+    print("calibrate IMU here!")
+    goto_main_screen(current_obj)
+
+
 # start recalculating
 start_calculations()
-# start on main screen
+# start on gps init screen
 main_screen.pack(fill="both", expand=True)
 
 # root mainloop
