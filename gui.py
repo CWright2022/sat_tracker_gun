@@ -135,9 +135,9 @@ def start_calculations():
         distance = CURRENT_SATELLITE.distance().km
         range_text = "Range: \n"+str(round(distance, 2))+"km"  # type:ignore
     else:
-        azimuth_text = ""
-        elevation_text = ""
-        range_text = ""
+        azimuth_text = "NO TLE"
+        elevation_text = "NO TLE"
+        range_text = "NO TLE"
     # actually set text
     azimuth.config(text=azimuth_text)
     elevation.config(text=elevation_text)
