@@ -29,26 +29,26 @@ root.attributes('-fullscreen', True)
 # MAIN SCREEN -------------------------
 main_screen = tk.Frame(root, bg=BG_COLOR)
 
-# main screen elements
+# satellite parameters
 azimuth = tk.Label(main_screen, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
 elevation = tk.Label(main_screen, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
 range = tk.Label(main_screen, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
-choose_sat_button = tk.Button(
-    main_screen,
-    text="Choose Satellite",
-    font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
-    command=lambda: goto_sat_chooser(choose_sat_button)
-)
-options_button = tk.Button(main_screen,
-                           text="Options",
-                           font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
-                           command=lambda: goto_options_screen(options_button)
-                           )
+# sat chooser
+choose_sat_button = tk.Label(main_screen, text="TARGET:\nNO TARGET", font=FONT_1, fg="red", bg=BG_COLOR)
+choose_sat_button.bind("<Button-1>", lambda _: goto_sat_chooser(choose_sat_button))
+# options
+options_button = tk.Label(main_screen, text="OPTIONS", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
+options_button.bind("<Button-1>", lambda _: goto_options_screen(options_button))
+# record button
+record_status = tk.Label(main_screen, text="SDR READY", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
+record_status.bind("<Button-1>", lambda _: toggle_recording())
+# but not this one
 exit_button = tk.Button(main_screen,
-                        text="Quit",
+                        text="QUIT",
                         font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
                         command=exit
                         )
+
 
 # pack and  place main screen elements
 azimuth.place(relx=0.5, rely=0.5, anchor="s")
@@ -57,15 +57,16 @@ choose_sat_button.place(relx=0, rely=0, anchor="nw")
 options_button.place(relx=1, rely=1, anchor="se")
 exit_button.place(relx=0.5, rely=1, anchor="s")
 range.place(relx=1, rely=0, anchor="ne")
+record_status.place(relx=0, rely=1, anchor="sw")
 
 # SATELLITE CHOOSER SCREEN-------------
 sat_chooser_screen = tk.Frame(root, bg=BG_COLOR)
 
 # sat chooser sceen elements
-title = tk.Label(sat_chooser_screen, text="Choose Satellite", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
+title = tk.Label(sat_chooser_screen, text="CHOOSE SATELLITE", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
 cancel_button_sat_chooser = tk.Button(
     sat_chooser_screen,
-    text="Cancel", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+    text="CANCEL", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
     command=lambda: set_current_satellite(None)
 )
 
@@ -79,19 +80,19 @@ options_screen = tk.Frame(root, bg=BG_COLOR)
 # options menu items
 shutdown_button = tk.Button(
     options_screen,
-    text="Shut Down", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+    text="SHUT DOWN", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
     # command=lambda: os.system("shutdown now -h")
     command=lambda: print("shut down!")
 )
 recalibrate_button = tk.Button(
     options_screen,
-    text="Recalibrate IMU", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+    text="RECALIBRATE IMU", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
     # TODO:actually make this recalibrate the imu
     command=lambda: print("recalibrate me!")
 )
 cancel_button_options_menu = tk.Button(
     options_screen,
-    text="Cancel", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
+    text="CANCEL", font=FONT_1, fg=FG_COLOR, bg=BUTTON_BG_COLOR,
     command=lambda: goto_main_screen(cancel_button_options_menu)
 
 )
@@ -130,18 +131,22 @@ def start_calculations():
     # if successful, recalculate and update text
     if gps.refresh() and CURRENT_SATELLITE != None:
         CURRENT_SATELLITE.recalculate(gps.latitude(), gps.longitude(), gps.datetime())
-        azimuth_text = "Azimuth: "+str(round(CURRENT_SATELLITE.azimuth(), 2))
-        elevation_text = "Elevation: "+str(round(CURRENT_SATELLITE.elevation(), 2))
+        azimuth_text = "AZIMUTH: "+str(round(CURRENT_SATELLITE.azimuth(), 2))
+        elevation_text = "ELEVATION: "+str(round(CURRENT_SATELLITE.elevation(), 2))
         distance = CURRENT_SATELLITE.distance().km
-        range_text = "Range: \n"+str(round(distance, 2))+"km"  # type:ignore
+        range_text = "RANGE: \n"+str(round(distance, 2))+"km"  # type:ignore
     else:
-        azimuth_text = "NO TLE"
-        elevation_text = "NO TLE"
-        range_text = "NO TLE"
+        azimuth_text = "NO DATA"
+        elevation_text = "NO DATA"
+        range_text = "NO DATA"
     # actually set text
-    azimuth.config(text=azimuth_text)
-    elevation.config(text=elevation_text)
-    range.config(text=range_text)
+    widget_list = [azimuth, elevation, range]
+    i = 0
+    for text in [azimuth_text, elevation_text, range_text]:
+        widget_list[i].config(fg=FG_COLOR, text=text)
+        if text == "NO DATA":
+            widget_list[i].config(fg="red")
+        i += 1
 
     # have this function call itself once every second in the background
     thread_obj = threading.Timer(1, start_calculations)
@@ -199,6 +204,25 @@ def set_current_satellite(sat_tuple):
         SAT_CHOOSER_BUTTONS[key].place_forget()
     sat_chooser_screen.pack_forget()
     main_screen.pack(fill="both", expand=True)
+    choose_sat_button.config(fg=FG_COLOR, text="TARGET:\n"+str(sat_tuple[0]))
+
+
+CURRENTLY_RECORDING = False
+
+
+def toggle_recording():
+    '''
+    stub to start/stop SDR recording
+    '''
+    global CURRENTLY_RECORDING
+    if CURRENTLY_RECORDING:
+        print("stopped recording")
+        record_status.config(text="SDR READY", fg=FG_COLOR)
+        CURRENTLY_RECORDING = False
+    else:
+        print("started recording")
+        record_status.config(text="RECORDING", fg="red")
+        CURRENTLY_RECORDING = True
 
 
 # start recalculating
