@@ -4,6 +4,7 @@ import gps_interface
 import threading
 import sat_track
 import os
+import time
 
 BG_COLOR = "black"
 FG_COLOR = "green"
@@ -21,6 +22,7 @@ class MainScreen(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
+        print("main init")
         # CROSSHAIRS (damn this is a lot just to display an image)
         # update geometry and determine height
         self.parent.update_idletasks()
@@ -61,6 +63,7 @@ class MainScreen(tk.Frame):
 
         # OPTIONS BUTTON
         self.options_button = tk.Button(
+            self,
             text="OPTIONS",
             font=FONT_1,
             fg=FG_COLOR,
@@ -72,6 +75,8 @@ class MainScreen(tk.Frame):
         self.start_calculations()
 
     def options(self):
+        print("main->options")
+        print("destroy main")
         self.destroy()
         _ = OptionsScreen(self.parent)
 
@@ -79,6 +84,8 @@ class MainScreen(tk.Frame):
         '''
         goes to sat chooser screen
         '''
+        print("main->satchooser")
+        print("destroy main")
         self.destroy()
         _ = SatChooserScreen(self.parent)
 
@@ -86,6 +93,7 @@ class MainScreen(tk.Frame):
         '''
         starts recalculating satellite alt/azimuth
         '''
+        print("calc angles")
         # if successful, recalculate and update text
         if GPS.refresh() and CURRENT_SATELLITE != None:
             CURRENT_SATELLITE.recalculate(GPS.latitude(), GPS.longitude(), GPS.datetime())
@@ -114,6 +122,7 @@ class SatChooserScreen(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
+        print("init sat chooser")
         # quitButton = tk.Button(self, text='Quit', command=lambda: self.go_back())
         # quitButton.place(relx=0.5, rely=1, anchor="s")
         # generate buttons based ona TLE file
@@ -124,6 +133,8 @@ class SatChooserScreen(tk.Frame):
         '''
         go back to main screen
         '''
+        print("sat_chooser->main")
+        print("destroy sat chooser")
         self.destroy()
         _ = MainScreen(self.parent)
 
@@ -159,8 +170,10 @@ class SatChooserScreen(tk.Frame):
         '''
         goes back to main screen and sets current satellite
         '''
+        print("set satellite")
         global CURRENT_SATELLITE
         CURRENT_SATELLITE = sat_track.Satellite(sat_tuple)
+        print("destroy sat chooser")
         self.destroy()
         _ = MainScreen(self.parent)
 
@@ -169,6 +182,7 @@ class OptionsScreen(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
+        print("init options")
 
         # shutdown button
         self.shutdown_button = tk.Button(
@@ -189,7 +203,7 @@ class OptionsScreen(tk.Frame):
             font=FONT_1,
             fg=FG_COLOR,
             bg=BUTTON_BG_COLOR,
-            command=lambda: print("recalibrate here")
+            command=self.recalibrate
         )
         self.recalibrate_button.pack()
 
@@ -208,14 +222,78 @@ class OptionsScreen(tk.Frame):
         self.pack(fill="both", expand=True)
 
     def cancel(self):
+        print("cancel options")
+        print("destroy options")
         self.destroy()
         _ = MainScreen(self.parent)
+
+    def recalibrate(self):
+        print("recalibrate")
+        print("destroy options")
+        self.destroy()
+        _ = InitScreen(self.parent)
+
+
+class InitScreen(tk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(*args, **kwargs, bg=BG_COLOR)
+        self.parent = parent
+        gps_text = "Waiting for GPS"
+        print("init init")
+
+        # GPS status label
+        self.gps_status_label = tk.Label(
+            self,
+            text=gps_text,
+            fg="red",
+            bg=BG_COLOR,
+            font=FONT_1
+        )
+        self.gps_status_label.place(relx=0.5, rely=0.2, anchor="s")
+        # show GPS fix status
+        self.show_gps_status()
+
+        # DO IMU CALCULATION SOMEWHERE IN HERE
+        self.imu_status_label = tk.Label(
+            self,
+            text="IMU OK",
+            font=FONT_1,
+            fg=FG_COLOR,
+            bg=BG_COLOR
+
+        )
+        self.imu_status_label.place(relx=0.5, rely=0.4, anchor="n")
+        # continue button
+        self.continue_button = tk.Button(
+            text="CONTINUE",
+            font=FONT_1,
+            fg=FG_COLOR,
+            bg=BUTTON_BG_COLOR,
+            command=self.continue_to_main
+        )
+        self.continue_button.place(relx=0.5, rely=1, anchor="s")
+
+        self.pack(fill="both", expand=True)
+
+    def continue_to_main(self):
+        print("init->main")
+        print("destroy init")
+        self.destroy()
+        _ = MainScreen(self.parent)
+
+    def show_gps_status(self):
+        if GPS.refresh():
+            self.gps_status_label.config(text="GPS OK", fg=FG_COLOR)
+        else:
+            self.gps_status_label.config(text="NO GPS", fg="red")
+        self.after(UPDATE_RATE, self.show_gps_status)
+        print("update GPS for init")
 
 
 def main():
     root = tk.Tk()
     root.attributes('-fullscreen', True)
-    _ = MainScreen(root)
+    _ = InitScreen(root)
     root.mainloop()
 
 
