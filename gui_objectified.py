@@ -17,12 +17,16 @@ GPS = gps_interface.GPS_module("COM7")
 
 CURRENT_SATELLITE = None
 
+CURRENTLY_RECORDING = False
+
 
 class MainScreen(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
         print("main init")
+        self.recording_text = ""
+        self.recording_fg = "red"
         # CROSSHAIRS (damn this is a lot just to display an image)
         # update geometry and determine height
         self.parent.update_idletasks()
@@ -74,6 +78,24 @@ class MainScreen(tk.Frame):
         # start calculating position
         self.start_calculations()
 
+        # RECORD BUTTON
+        self.record_button = tk.Label(
+            self,
+            text=self.recording_text,
+            fg=self.recording_fg,
+            font=FONT_1,
+            bg=BG_COLOR
+        )
+        self.record_button.bind("<Button-1>", lambda _: self.toggle_recording())
+        self.update_record_data()
+        self.record_button.place(relx=0, rely=1, anchor="sw")
+
+    def update_record_data(self):
+        if CURRENTLY_RECORDING:
+            self.record_button.config(text="RECORDING", fg="red")
+        else:
+            self.record_button.config(text="SDR READY", fg=FG_COLOR)
+
     def options(self):
         print("main->options")
         print("destroy main")
@@ -116,6 +138,16 @@ class MainScreen(tk.Frame):
 
         # have this function call itself once every second in the background
         self.after(UPDATE_RATE, self.start_calculations)
+
+    def toggle_recording(self):
+        global CURRENTLY_RECORDING
+        if CURRENTLY_RECORDING:
+            print("stop recording")
+            CURRENTLY_RECORDING = False
+        else:
+            print("start recording")
+            CURRENTLY_RECORDING = True
+        self.update_record_data()
 
 
 class SatChooserScreen(tk.Frame):
