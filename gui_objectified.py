@@ -2,11 +2,15 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import gps_interface
 import threading
+import sat_track
+import os
 
 BG_COLOR = "black"
 FG_COLOR = "green"
 BUTTON_BG_COLOR = "#212121"
 FONT_1 = ("System", 32)
+
+UPDATE_RATE = 1000
 
 GPS = gps_interface.GPS_module("COM7")
 
@@ -45,7 +49,7 @@ class MainScreen(tk.Frame):
         global CURRENT_SATELLITE
         # change style accordingly
         if CURRENT_SATELLITE is not None:
-            text = CURRENT_SATELLITE[0]
+            text = CURRENT_SATELLITE.get_tle_tuple()[0]
             fg = FG_COLOR
         else:
             text = "TARGET:\nNO TARGET"
@@ -54,8 +58,22 @@ class MainScreen(tk.Frame):
         choose_sat_button = tk.Label(self, text=text, font=FONT_1, fg=fg, bg=BG_COLOR)
         choose_sat_button.bind("<Button-1>", lambda _: self.choose_sats())
         choose_sat_button.place(relx=0, rely=0, anchor="nw")
+
+        # OPTIONS BUTTON
+        self.options_button = tk.Button(
+            text="OPTIONS",
+            font=FONT_1,
+            fg=FG_COLOR,
+            bg=BUTTON_BG_COLOR,
+            command=self.options
+        )
+        self.options_button.place(relx=1, rely=1, anchor="se")
         # start calculating position
         self.start_calculations()
+
+    def options(self):
+        self.destroy()
+        _ = OptionsScreen(self.parent)
 
     def choose_sats(self):
         '''
@@ -88,10 +106,8 @@ class MainScreen(tk.Frame):
                 widget_list[i].config(fg="red")
             i += 1
 
-    # have this function call itself once every second in the background
-    thread_obj = threading.Timer(1, start_calculations)
-    thread_obj.daemon = True
-    thread_obj.start()
+        # have this function call itself once every second in the background
+        self.after(UPDATE_RATE, self.start_calculations)
 
 
 class SatChooserScreen(tk.Frame):
@@ -143,9 +159,56 @@ class SatChooserScreen(tk.Frame):
         '''
         goes back to main screen and sets current satellite
         '''
-        self.destroy()
         global CURRENT_SATELLITE
-        CURRENT_SATELLITE = sat_tuple
+        CURRENT_SATELLITE = sat_track.Satellite(sat_tuple)
+        self.destroy()
+        _ = MainScreen(self.parent)
+
+
+class OptionsScreen(tk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(*args, **kwargs, bg=BG_COLOR)
+        self.parent = parent
+
+        # shutdown button
+        self.shutdown_button = tk.Button(
+            self,
+            text="SHUT DOWN",
+            font=FONT_1,
+            fg=FG_COLOR,
+            bg=BUTTON_BG_COLOR,
+            # command=lambda: os.system("shutdown now -h")
+            command=exit
+        )
+        self.shutdown_button.pack()
+
+        # recalibrate button
+        self.recalibrate_button = tk.Button(
+            self,
+            text="RECALIBRATE SENSORS",
+            font=FONT_1,
+            fg=FG_COLOR,
+            bg=BUTTON_BG_COLOR,
+            command=lambda: print("recalibrate here")
+        )
+        self.recalibrate_button.pack()
+
+        # cancel button
+        self.cancel_button = tk.Button(
+            self,
+            text="CANCEL",
+            font=FONT_1,
+            fg=FG_COLOR,
+            bg=BUTTON_BG_COLOR,
+            command=self.cancel
+        )
+        self.cancel_button.pack()
+
+        # pack self
+        self.pack(fill="both", expand=True)
+
+    def cancel(self):
+        self.destroy()
         _ = MainScreen(self.parent)
 
 
