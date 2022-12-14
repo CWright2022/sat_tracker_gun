@@ -182,29 +182,31 @@ class SatChooserScreen(tk.Frame):
                 if number_of_sats == 7:
                     break
                 if line[0] != 1 and line[0] != 2 and line[0] != "\n":
-                    self.sat_buttons[line.strip()] = (line.strip(), next(tle_file).strip(), next(tle_file).strip())
+                    self.sat_buttons[line.strip()] = [(line.strip(), next(tle_file).strip(),
+                                                       next(tle_file).strip()), next(tle_file).strip().split(",")]
                     number_of_sats += 1
         # for every key in the dictionary, convert the value to a button
         for key in self.sat_buttons:
-            sat_tuple = self.sat_buttons[key]
+            sat_tuple = self.sat_buttons[key][0]
+            radio_tuple = self.sat_buttons[key][1]
             button = tk.Button(self,
                                text=key,
                                font=FONT_1,
                                fg=FG_COLOR,
                                bg=BUTTON_BG_COLOR,
-                               command=lambda sat_tuple=sat_tuple: self.set_satellite(sat_tuple)
+                               command=lambda sat_tuple=sat_tuple: self.set_satellite(sat_tuple, radio_tuple)
                                )
 
             self.sat_buttons[key] = button
             button.pack()
 
-    def set_satellite(self, sat_tuple):
+    def set_satellite(self, sat_tuple, radio_tuple):
         '''
         goes back to main screen and sets current satellite
         '''
         print("set satellite")
         global CURRENT_SATELLITE
-        CURRENT_SATELLITE = sat_track.Satellite(sat_tuple)
+        CURRENT_SATELLITE = sat_track.Satellite(sat_tuple, radio_tuple)
         print("destroy sat chooser")
         self.destroy()
         _ = MainScreen(self.parent)

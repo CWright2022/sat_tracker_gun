@@ -10,9 +10,9 @@ ts = load.timescale()
 
 
 class Satellite:
-    __slots__ = ["__tle_tuple", "__azimuth", "__elevation", "__sat_obj", "__distance"]
+    __slots__ = ["__tle_tuple", "__azimuth", "__elevation", "__sat_obj", "__distance", "__freq", "__modulation", "__bandwidth"]
 
-    def __init__(self, tle_tuple):
+    def __init__(self, tle_tuple, radio_tuple):
         self.__tle_tuple = tle_tuple
         name = self.__tle_tuple[0]
         tle_1 = self.__tle_tuple[1]
@@ -20,6 +20,9 @@ class Satellite:
         # create ts object
         satellite = EarthSatellite(tle_1, tle_2, name, ts)
         self.__sat_obj = satellite
+        self.__freq = radio_tuple[0]
+        self.__modulation = radio_tuple[1]
+        self.__bandwidth = radio_tuple[2]
 
     def recalculate(self, obs_lat, obs_long, datetime_obj):
         '''
@@ -52,6 +55,15 @@ class Satellite:
 
     def get_tle_tuple(self):
         return self.__tle_tuple
+
+    def get_frequency(self):
+        return self.__freq
+    
+    def get_modulation(self):
+        return self.__modulation
+
+    def get_bandwidth(self):
+        return self.__bandwidth
 
 
 def convert_to_dd(angle):
