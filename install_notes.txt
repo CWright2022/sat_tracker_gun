@@ -1,2 +1,12 @@
 install sox (apt-get install sox)
-
+blacklist kernel module (echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist.conf)
+install tkinter (apt-get install python-tk) (or pip)
+install pyserial (apt-get install python3-serial) (or pip)
+install skyfield (pip install skyfield)
+install xserver (apt-get install xserver-xorg)
+install xinit (apt-get install xinit)
+change /etc/X11/Xwrapper.config permissions to "anybody"
+sudo usermod -aG tty pi
+sudo chmod +rrr /dev/tty2
+export DISPLAY=:0
+sudo apt-get install xorg

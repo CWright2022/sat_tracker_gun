@@ -1,5 +1,6 @@
+#!/usr/bin/python3.9
 import tkinter as tk
-from PIL import Image, ImageTk
+from PIL import Image#, ImageTk
 import gps_interface
 import threading
 import sat_track
@@ -143,10 +144,16 @@ class MainScreen(tk.Frame):
         global CURRENTLY_RECORDING
         if CURRENTLY_RECORDING:
             print("stop recording")
+            os.system("/home/pi/sat_tracker_gun/stop_recording.sh")
             CURRENTLY_RECORDING = False
         else:
             print("start recording")
+            os.system("/home/pi/sat_tracker_gun/start_recording.sh "\
+            +CURRENT_SATELLITE.get_frequency()+" "\
+            +CURRENT_SATELLITE.get_modulation()+" "\
+            +CURRENT_SATELLITE.get_bandwidth())
             CURRENTLY_RECORDING = True
+
         self.update_record_data()
 
 
