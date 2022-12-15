@@ -1,8 +1,17 @@
+update repo lists (apt-get update)
+install git (apt-get install git)
+clone repo (git clone https://github.com/CWright2022/sat_tracker_gun)
 install sox (apt-get install sox)
-blacklist kernel module (echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist.conf)
-install tkinter (apt-get install python-tk) (or pip)
-install pyserial (apt-get install python3-serial) (or pip)
+
+blacklist kernel module (echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist.conf) !!
+
+install pip (apt-get install python3-pip)
+install tkinter (pip install tk)
+install pyserial (pip install pyserial)
 install skyfield (pip install skyfield)
+install ImageTk part of PIL (apt-get install python3-pil.imagetk)
+install X tools (apt-get install --no-install-recommends xserver-xorg-video-all xserver-xorg-input-all xserver-xorg-core xinit x11-xserver-utils)
+
 install xserver (apt-get install xserver-xorg)
 install xinit (apt-get install xinit)
 change /etc/X11/Xwrapper.config permissions to "anybody"
