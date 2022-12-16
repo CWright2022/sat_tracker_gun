@@ -168,7 +168,7 @@ class SatChooserScreen(tk.Frame):
         # quitButton = tk.Button(self, text='Quit', command=lambda: self.go_back())
         # quitButton.place(relx=0.5, rely=1, anchor="s")
         # generate buttons based ona TLE file
-        self.generate_tle_buttons("./tle.txt")
+        self.generate_tle_buttons("/home/pi/sat_tracker_gun/tle.txt")
         self.pack(fill="both", expand=True)
 
     def go_back(self):
