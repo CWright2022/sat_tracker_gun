@@ -150,6 +150,10 @@ class MainScreen(tk.Frame):
             print("start recording")
             CURRENTLY_RECORDING = True
             if CURRENT_SATELLITE != None:
+                print("/home/pi/sat_tracker_gun/start_recording.sh "
+                      + CURRENT_SATELLITE.get_frequency()+" "
+                      + CURRENT_SATELLITE.get_modulation()+" "
+                      + CURRENT_SATELLITE.get_bandwidth())
                 os.system("/home/pi/sat_tracker_gun/start_recording.sh "
                           + CURRENT_SATELLITE.get_frequency()+" "
                           + CURRENT_SATELLITE.get_modulation()+" "
