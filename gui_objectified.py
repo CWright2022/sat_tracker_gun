@@ -14,7 +14,7 @@ FONT_1 = ("System", 32)
 
 UPDATE_RATE = 1000
 
-GPS = gps_interface.GPS_module("COM7")
+GPS = gps_interface.GPS_module("/dev/ttyACM0")
 
 CURRENT_SATELLITE = None
 
