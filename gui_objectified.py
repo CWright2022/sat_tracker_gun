@@ -201,6 +201,7 @@ class SatChooserScreen(tk.Frame):
                     number_of_sats += 1
         # for every key in the dictionary, convert the value to a button
         for key in self.sat_buttons:
+            print(key+"   "+self.sat_buttons[key])
             sat_tuple = self.sat_buttons[key][0]
             radio_tuple = self.sat_buttons[key][1]
             button = tk.Button(self,
@@ -208,7 +209,7 @@ class SatChooserScreen(tk.Frame):
                                font=FONT_1,
                                fg=FG_COLOR,
                                bg=BUTTON_BG_COLOR,
-                               command=lambda sat_tuple=sat_tuple: self.set_satellite(sat_tuple, radio_tuple)
+                               command=lambda sat_tuple=sat_tuple, radio_tuple=radio_tuple: self.set_satellite(sat_tuple, radio_tuple)
                                )
 
             self.sat_buttons[key] = button
