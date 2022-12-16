@@ -34,7 +34,7 @@ class MainScreen(tk.Frame):
         window_height = self.parent.winfo_height()
 
         # load and process image
-        crosshairs = Image.open("./assets/crosshairs.png")
+        crosshairs = Image.open("/home/pi/sat_tracker_gun/assets/crosshairs.png")
         crosshairs = crosshairs.resize((window_height, window_height), Image.Resampling.NEAREST)
         crosshairs = ImageTk.PhotoImage(crosshairs)
         self.crosshairs_label = tk.Label(self, image=crosshairs)

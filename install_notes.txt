@@ -1,21 +1,31 @@
-update repo lists (apt-get update)
-install git (apt-get install git)
-clone repo (git clone https://github.com/CWright2022/sat_tracker_gun)
-install sox (apt-get install sox)
+set autologin (sudo raspi-config) (GUI :/)
+install git (apt-get install git) (needs network :/)
+clone git repo (git clone https://github.com/CWright2022/sat_tracker_gun)
+RUN INSTALL.SH (sudo bash install.sh)
+    update repo lists (apt-get update)
+    install git (apt-get install git)
+    install sox (apt-get install sox)
+    install pip (apt-get install python3-pip)
+    install tkinter (pip install tk)
+    install pyserial (pip install pyserial)
+    install skyfield (pip install skyfield)
+    install ImageTk part of PIL (apt-get install python3-pil.imagetk)
+    #install x server (apt-get install xserver-xorg)
+    #install x init (apt-get install xinit)
+    export DISPLAY=:0
 
-blacklist kernel module (echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist.conf) !!
 
-install pip (apt-get install python3-pip)
-install tkinter (pip install tk)
-install pyserial (pip install pyserial)
-install skyfield (pip install skyfield)
-install ImageTk part of PIL (apt-get install python3-pil.imagetk)
+
+
+
+
+
+
+blacklist kernel module (echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist.conf)
+
 install X tools (apt-get install --no-install-recommends xserver-xorg-video-all xserver-xorg-input-all xserver-xorg-core xinit x11-xserver-utils)
 
-install xserver (apt-get install xserver-xorg)
-install xinit (apt-get install xinit)
 change /etc/X11/Xwrapper.config permissions to "anybody"
 sudo usermod -aG tty pi
 sudo chmod +rrr /dev/tty2
-export DISPLAY=:0
 sudo apt-get install xorg
