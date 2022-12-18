@@ -147,6 +147,7 @@ class MainScreen(tk.Frame):
         delta = datetime.timedelta(hours=-5)  # only east coast for now lol
         eastern = datetime.timezone(delta)
         time_string = str(GPS.datetime().now(tz=eastern))
+        time_string = time_string[5:-16]
         if CURRENTLY_RECORDING:
             logging.debug("stop recording")
             os.system(CURRENT_DIR+"stop_recording.sh")
@@ -159,12 +160,14 @@ class MainScreen(tk.Frame):
                               + CURRENT_SATELLITE.get_frequency()+" "
                               + CURRENT_SATELLITE.get_modulation()+" "
                               + CURRENT_SATELLITE.get_bandwidth()+" "
-                              + str(GPS.datetime()))
+                              + time_string+" "
+                              + CURRENT_SATELLITE.get_tle_tuple()[0])
                 os.system(CURRENT_DIR+"start_recording.sh "
                           + CURRENT_SATELLITE.get_frequency()+" "
                           + CURRENT_SATELLITE.get_modulation()+" "
                           + CURRENT_SATELLITE.get_bandwidth()+" "
-                          + time_string)
+                          + time_string+" "
+                          + CURRENT_SATELLITE.get_tle_tuple()[0])
             else:
                 self.toggle_recording()
 
@@ -353,7 +356,7 @@ def start_logs():
     global CURRENT_DIR
     log_refreshed = False
     log_size = os.path.getsize(CURRENT_DIR+"sat_tracker.log")
-    if log_size*1000000 > 100:
+    if log_size*100000000 > 100:
         os.remove(CURRENT_DIR+"sat_tracker.log")
         log_refreshed = True
     # calculate a basic string representation of the current date/time for use in file naming
