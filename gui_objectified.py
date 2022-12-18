@@ -2,24 +2,23 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 import gps_interface
-import threading
 import sat_track
 import os
-import time
 import logging
+import datetime
 
 BG_COLOR = "black"
 FG_COLOR = "green"
 BUTTON_BG_COLOR = "#212121"
 FONT_1 = ("System", 32)
 
-CURRENT_DIR = "C:/Users/minds/Code/gps_stuff/"
+# CURRENT_DIR = "C:/Users/minds/Code/gps_stuff/"
+CURRENT_DIR = "/home/pi/sat_tracker_gun/"
 
 UPDATE_RATE = 1000
 
 GPS = gps_interface.GPS_module("/dev/ttyACM0")
-
-logging.basicConfig(filename=CURRENT_DIR+"sat-tracker.log", level=logging.DEBUG)
+# GPS = gps_interface.GPS_module("COM7")
 
 CURRENT_SATELLITE = None
 
@@ -141,11 +140,13 @@ class MainScreen(tk.Frame):
             i += 1
 
         # have this function call itself once every second in the background
-        logging.debug("current time in EST is :"+str(GPS.datetime().now))
         self.after(UPDATE_RATE, self.start_calculations)
 
     def toggle_recording(self):
         global CURRENTLY_RECORDING
+        delta = datetime.timedelta(hours=-5)  # only east coast for now lol
+        eastern = datetime.timezone(delta)
+        time_string = str(GPS.datetime().now(tz=eastern))
         if CURRENTLY_RECORDING:
             logging.debug("stop recording")
             os.system(CURRENT_DIR+"stop_recording.sh")
@@ -163,7 +164,7 @@ class MainScreen(tk.Frame):
                           + CURRENT_SATELLITE.get_frequency()+" "
                           + CURRENT_SATELLITE.get_modulation()+" "
                           + CURRENT_SATELLITE.get_bandwidth()+" "
-                          + str(GPS.datetime()))
+                          + time_string)
             else:
                 self.toggle_recording()
 
@@ -338,8 +339,37 @@ class InitScreen(tk.Frame):
         logging.debug("update GPS data for calibration screen")
 
 
-def main():
+def utc_to_est(utc_dt):
+    fmt = "%Y-%m-%d %H:%M:%S"
+    est_time = utc_dt.astimezone(datetime.timezone('US/Eastern'))
+    return est_time.strftime(fmt)
+
+
+def start_logs():
+    '''
+    initialize logging for the application
+    '''
+    # if log is over 100MB, delete it and start new
+    global CURRENT_DIR
+    log_refreshed = False
+    log_size = os.path.getsize(CURRENT_DIR+"sat_tracker.log")
+    if log_size*1000000 > 100:
+        os.remove(CURRENT_DIR+"sat_tracker.log")
+        log_refreshed = True
+    # calculate a basic string representation of the current date/time for use in file naming
+    delta = datetime.timedelta(hours=-5)  # only east coast for now lol
+    eastern = datetime.timezone(delta)
+    time_string = str(GPS.datetime().now(tz=eastern))
+    # initialize logs and say hello
+    logging.basicConfig(filename=CURRENT_DIR+"sat_tracker.log", level=logging.DEBUG)
     logging.info("Starting Trackellite v0.8 (or something like that)")
+    logging.info("Current time (UTC) is "+time_string)
+    if log_refreshed:
+        logging.warning("previous log was deleted due to size being > 100MB")
+
+
+def main():
+    start_logs()
     root = tk.Tk()
     root.attributes('-fullscreen', True)
     logging.debug("initialized Tk root")
