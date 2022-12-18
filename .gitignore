@@ -1,2 +1,5 @@
 *test*
-__pycache__/*
+__pycache__/
+.vscode/
+*.log
+*.wav

@@ -13,15 +13,18 @@ FG_COLOR = "green"
 BUTTON_BG_COLOR = "#212121"
 FONT_1 = ("System", 32)
 
+CURRENT_DIR = "C:/Users/minds/Code/gps_stuff/"
+
 UPDATE_RATE = 1000
 
 GPS = gps_interface.GPS_module("/dev/ttyACM0")
 
-logging.basicConfig(filename="/home/pi/sat_tracker_gun/sat-tracker.log", level=logging.DEBUG)
+logging.basicConfig(filename=CURRENT_DIR+"sat-tracker.log", level=logging.DEBUG)
 
 CURRENT_SATELLITE = None
 
 CURRENTLY_RECORDING = False
+
 
 class MainScreen(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
@@ -36,7 +39,7 @@ class MainScreen(tk.Frame):
         window_height = self.parent.winfo_height()
 
         # load and process image
-        crosshairs = Image.open("/home/pi/sat_tracker_gun/assets/crosshairs.png")
+        crosshairs = Image.open(CURRENT_DIR+"assets/crosshairs.png")
         crosshairs = crosshairs.resize((window_height, window_height), resample=Image.NEAREST)
         crosshairs = ImageTk.PhotoImage(crosshairs)
         self.crosshairs_label = tk.Label(self, image=crosshairs)
@@ -138,29 +141,29 @@ class MainScreen(tk.Frame):
             i += 1
 
         # have this function call itself once every second in the background
-        logging.debug("current time in EST is :"+str(GPS.datetime.now))
+        logging.debug("current time in EST is :"+str(GPS.datetime().now))
         self.after(UPDATE_RATE, self.start_calculations)
 
     def toggle_recording(self):
         global CURRENTLY_RECORDING
         if CURRENTLY_RECORDING:
             logging.debug("stop recording")
-            os.system("/home/pi/sat_tracker_gun/stop_recording.sh")
+            os.system(CURRENT_DIR+"stop_recording.sh")
             CURRENTLY_RECORDING = False
         else:
             logging.debug("start recording")
             CURRENTLY_RECORDING = True
             if CURRENT_SATELLITE != None:
                 logging.debug("running command: /home/pi/sat_tracker_gun/start_recording.sh "
-                      + CURRENT_SATELLITE.get_frequency()+" "
-                      + CURRENT_SATELLITE.get_modulation()+" "
-                      + CURRENT_SATELLITE.get_bandwidth()+" "
-                      + str(GPS.datetime()))
-                os.system("/home/pi/sat_tracker_gun/start_recording.sh "
-                      + CURRENT_SATELLITE.get_frequency()+" "
-                      + CURRENT_SATELLITE.get_modulation()+" "
-                      + CURRENT_SATELLITE.get_bandwidth()+" "
-                      + str(GPS.datetime()))
+                              + CURRENT_SATELLITE.get_frequency()+" "
+                              + CURRENT_SATELLITE.get_modulation()+" "
+                              + CURRENT_SATELLITE.get_bandwidth()+" "
+                              + str(GPS.datetime()))
+                os.system(CURRENT_DIR+"start_recording.sh "
+                          + CURRENT_SATELLITE.get_frequency()+" "
+                          + CURRENT_SATELLITE.get_modulation()+" "
+                          + CURRENT_SATELLITE.get_bandwidth()+" "
+                          + str(GPS.datetime()))
             else:
                 self.toggle_recording()
 
@@ -173,7 +176,7 @@ class SatChooserScreen(tk.Frame):
         self.parent = parent
         logging.debug("initialize sat chooser")
         # generate buttons based ona TLE file
-        self.generate_tle_buttons("/home/pi/sat_tracker_gun/tle.txt")
+        self.generate_tle_buttons(CURRENT_DIR+"tle.txt")
         self.pack(fill="both", expand=True)
 
     def go_back(self):

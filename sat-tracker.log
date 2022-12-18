@@ -202,3 +202,32 @@ DEBUG:root:init main screen
 DEBUG:PIL.PngImagePlugin:STREAM b'IHDR' 16 13
 DEBUG:PIL.PngImagePlugin:STREAM b'IDAT' 41 8192
 DEBUG:root:recalculating satellite params
+INFO:root:Starting Trackellite v0.8 (or something like that)
+DEBUG:root:initialized Tk root
+DEBUG:root:initialize calibration/init screen
+DEBUG:root:update GPS data for calibration screen
+DEBUG:root:update GPS data for calibration screen
+DEBUG:root:destroy init
+DEBUG:root:init main screen
+DEBUG:PIL.PngImagePlugin:STREAM b'IHDR' 16 13
+DEBUG:PIL.PngImagePlugin:STREAM b'IDAT' 41 8192
+DEBUG:root:recalculating satellite params
+DEBUG:root:destroy main
+DEBUG:root:initialize sat chooser
+DEBUG:root:setting satellite to Metop-B(froggy98test)
+DEBUG:root:destroy sat chooser
+DEBUG:root:init main screen
+DEBUG:PIL.PngImagePlugin:STREAM b'IHDR' 16 13
+DEBUG:PIL.PngImagePlugin:STREAM b'IDAT' 41 8192
+DEBUG:root:recalculating satellite params
+INFO:root:Starting Trackellite v0.8 (or something like that)
+DEBUG:root:initialized Tk root
+DEBUG:root:initialize calibration/init screen
+DEBUG:root:update GPS data for calibration screen
+DEBUG:root:destroy init
+DEBUG:root:init main screen
+DEBUG:PIL.PngImagePlugin:STREAM b'IHDR' 16 13
+DEBUG:PIL.PngImagePlugin:STREAM b'IDAT' 41 8192
+DEBUG:root:recalculating satellite params
+DEBUG:root:destroy main
+DEBUG:root:initialize options screen
