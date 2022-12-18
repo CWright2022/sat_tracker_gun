@@ -6,6 +6,7 @@ import threading
 import sat_track
 import os
 import time
+import logging
 
 BG_COLOR = "black"
 FG_COLOR = "green"
@@ -16,16 +17,17 @@ UPDATE_RATE = 1000
 
 GPS = gps_interface.GPS_module("/dev/ttyACM0")
 
+logging.basicConfig(filename="/home/pi/sat_tracker_gun/sat-tracker.log", level=logging.DEBUG)
+
 CURRENT_SATELLITE = None
 
 CURRENTLY_RECORDING = False
-
 
 class MainScreen(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
-        print("main init")
+        logging.debug("init main screen")
         self.recording_text = ""
         self.recording_fg = "red"
         # CROSSHAIRS (damn this is a lot just to display an image)
@@ -98,8 +100,7 @@ class MainScreen(tk.Frame):
             self.record_button.config(text="SDR READY", fg=FG_COLOR)
 
     def options(self):
-        print("main->options")
-        print("destroy main")
+        logging.debug("destroy main")
         self.destroy()
         _ = OptionsScreen(self.parent)
 
@@ -107,8 +108,7 @@ class MainScreen(tk.Frame):
         '''
         goes to sat chooser screen
         '''
-        print("main->satchooser")
-        print("destroy main")
+        logging.debug("destroy main")
         self.destroy()
         _ = SatChooserScreen(self.parent)
 
@@ -116,7 +116,7 @@ class MainScreen(tk.Frame):
         '''
         starts recalculating satellite alt/azimuth
         '''
-        print("calc angles")
+        logging.debug("recalculating satellite params")
         # if successful, recalculate and update text
         if GPS.refresh() and CURRENT_SATELLITE != None:
             CURRENT_SATELLITE.recalculate(GPS.latitude(), GPS.longitude(), GPS.datetime())
@@ -138,26 +138,29 @@ class MainScreen(tk.Frame):
             i += 1
 
         # have this function call itself once every second in the background
+        logging.debug("current time in EST is :"+str(GPS.datetime.now))
         self.after(UPDATE_RATE, self.start_calculations)
 
     def toggle_recording(self):
         global CURRENTLY_RECORDING
         if CURRENTLY_RECORDING:
-            print("stop recording")
+            logging.debug("stop recording")
             os.system("/home/pi/sat_tracker_gun/stop_recording.sh")
             CURRENTLY_RECORDING = False
         else:
-            print("start recording")
+            logging.debug("start recording")
             CURRENTLY_RECORDING = True
             if CURRENT_SATELLITE != None:
-                print("/home/pi/sat_tracker_gun/start_recording.sh "
+                logging.debug("running command: /home/pi/sat_tracker_gun/start_recording.sh "
                       + CURRENT_SATELLITE.get_frequency()+" "
                       + CURRENT_SATELLITE.get_modulation()+" "
-                      + CURRENT_SATELLITE.get_bandwidth())
+                      + CURRENT_SATELLITE.get_bandwidth()+" "
+                      + str(GPS.datetime()))
                 os.system("/home/pi/sat_tracker_gun/start_recording.sh "
-                          + CURRENT_SATELLITE.get_frequency()+" "
-                          + CURRENT_SATELLITE.get_modulation()+" "
-                          + CURRENT_SATELLITE.get_bandwidth())
+                      + CURRENT_SATELLITE.get_frequency()+" "
+                      + CURRENT_SATELLITE.get_modulation()+" "
+                      + CURRENT_SATELLITE.get_bandwidth()+" "
+                      + str(GPS.datetime()))
             else:
                 self.toggle_recording()
 
@@ -168,9 +171,7 @@ class SatChooserScreen(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
-        print("init sat chooser")
-        # quitButton = tk.Button(self, text='Quit', command=lambda: self.go_back())
-        # quitButton.place(relx=0.5, rely=1, anchor="s")
+        logging.debug("initialize sat chooser")
         # generate buttons based ona TLE file
         self.generate_tle_buttons("/home/pi/sat_tracker_gun/tle.txt")
         self.pack(fill="both", expand=True)
@@ -179,8 +180,7 @@ class SatChooserScreen(tk.Frame):
         '''
         go back to main screen
         '''
-        print("sat_chooser->main")
-        print("destroy sat chooser")
+        logging.debug("destroy sat chooser")
         self.destroy()
         _ = MainScreen(self.parent)
 
@@ -201,7 +201,6 @@ class SatChooserScreen(tk.Frame):
                     number_of_sats += 1
         # for every key in the dictionary, convert the value to a button
         for key in self.sat_buttons:
-            print(key+"   "+str(self.sat_buttons[key]))
             sat_tuple = self.sat_buttons[key][0]
             radio_tuple = self.sat_buttons[key][1]
             button = tk.Button(self,
@@ -219,10 +218,10 @@ class SatChooserScreen(tk.Frame):
         '''
         goes back to main screen and sets current satellite
         '''
-        print("set satellite")
+        logging.debug("setting satellite to "+sat_tuple[0])
         global CURRENT_SATELLITE
         CURRENT_SATELLITE = sat_track.Satellite(sat_tuple, radio_tuple)
-        print("destroy sat chooser")
+        logging.debug("destroy sat chooser")
         self.destroy()
         _ = MainScreen(self.parent)
 
@@ -231,7 +230,7 @@ class OptionsScreen(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
-        print("init options")
+        logging.debug("initialize options screen")
 
         # shutdown button
         self.shutdown_button = tk.Button(
@@ -271,14 +270,12 @@ class OptionsScreen(tk.Frame):
         self.pack(fill="both", expand=True)
 
     def cancel(self):
-        print("cancel options")
-        print("destroy options")
+        logging.debug("destroy options")
         self.destroy()
         _ = MainScreen(self.parent)
 
     def recalibrate(self):
-        print("recalibrate")
-        print("destroy options")
+        logging.debug("destroy options")
         self.destroy()
         _ = InitScreen(self.parent)
 
@@ -288,7 +285,7 @@ class InitScreen(tk.Frame):
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
         gps_text = "Waiting for GPS"
-        print("init init")
+        logging.debug("initialize calibration/init screen")
 
         # GPS status label
         self.gps_status_label = tk.Label(
@@ -325,8 +322,7 @@ class InitScreen(tk.Frame):
         self.pack(fill="both", expand=True)
 
     def continue_to_main(self):
-        print("init->main")
-        print("destroy init")
+        logging.debug("destroy init")
         self.destroy()
         _ = MainScreen(self.parent)
 
@@ -336,12 +332,14 @@ class InitScreen(tk.Frame):
         else:
             self.gps_status_label.config(text="NO GPS", fg="red")
         self.after(UPDATE_RATE, self.show_gps_status)
-        print("update GPS for init")
+        logging.debug("update GPS data for calibration screen")
 
 
 def main():
+    logging.info("Starting Trackellite v0.8 (or something like that)")
     root = tk.Tk()
     root.attributes('-fullscreen', True)
+    logging.debug("initialized Tk root")
     _ = InitScreen(root)
     root.mainloop()
 

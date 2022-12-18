@@ -1,1 +1,0 @@
-./rtl_fm.exe -M wbfm -f 98.1M -s 250k | ./sox.exe -t raw -e signed-integer -b 16 -c 1 -r 34k - foo.wav
