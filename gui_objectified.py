@@ -1,4 +1,9 @@
 #!/usr/bin/python3.9
+'''
+"TRACKELLITE" - the satellite tracker that'll get you kicked out of an airport
+by Cayden Wright and Jonathan Godfrey
+October 2022
+'''
 import tkinter as tk
 from PIL import Image, ImageTk
 import gps_interface
@@ -6,27 +11,36 @@ import sat_track
 import os
 import logging
 import datetime
+import re
 
+#globals to set UI theme
 BG_COLOR = "black"
 FG_COLOR = "green"
 BUTTON_BG_COLOR = "#212121"
 FONT_1 = ("System", 32)
 
+#current directory - soon to be overhauled (one for windows testing, other for RasPi)
 # CURRENT_DIR = "C:/Users/minds/Code/gps_stuff/"
 CURRENT_DIR = "/home/pi/sat_tracker_gun/"
 
+#how often to refresh satellite data, in ms
 UPDATE_RATE = 1000
 
+#define GPS instance (one for Windows, one for Linux)
 GPS = gps_interface.GPS_module("/dev/ttyACM0")
 # GPS = gps_interface.GPS_module("COM7")
 
+#other miscellaneous globals
 CURRENT_SATELLITE = None
-
 CURRENTLY_RECORDING = False
 
 
 class MainScreen(tk.Frame):
+    '''
+    define a main screen (with crosshairs and stuff)
+    '''
     def __init__(self, parent, *args, **kwargs):
+        #init super() (tk.Frame) and other boilerplate
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
         logging.debug("init main screen")
@@ -48,7 +62,7 @@ class MainScreen(tk.Frame):
         self.crosshairs_label.place(relx=0.5, rely=0.5, anchor="center")
         self.pack(fill="both", expand=True)
 
-        # SATELLITE PARAMETERS (temp until we get the "rolling ball" working)
+        # SATELLITE PARAMETERS (temporary until we get the "rolling ball" working)
         self.azimuth = tk.Label(self, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
         self.elevation = tk.Label(self, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
         self.range = tk.Label(self, text="", font=FONT_1, fg=FG_COLOR, bg=BG_COLOR)
@@ -58,7 +72,7 @@ class MainScreen(tk.Frame):
 
         # SAT CHOOSER BUTTON
         global CURRENT_SATELLITE
-        # change style accordingly
+        # change style according to current Satellite
         if CURRENT_SATELLITE is not None:
             text = CURRENT_SATELLITE.get_tle_tuple()[0]
             fg = FG_COLOR
@@ -91,17 +105,24 @@ class MainScreen(tk.Frame):
             font=FONT_1,
             bg=BG_COLOR
         )
+        #bind and place
         self.record_button.bind("<Button-1>", lambda _: self.toggle_recording())
         self.update_record_data()
         self.record_button.place(relx=0, rely=1, anchor="sw")
 
     def update_record_data(self):
+        '''
+        updates style of recording button to show current status
+        '''
         if CURRENTLY_RECORDING:
             self.record_button.config(text="RECORDING", fg="red")
         else:
             self.record_button.config(text="SDR READY", fg=FG_COLOR)
 
     def options(self):
+        '''
+        go to options screen
+        '''
         logging.debug("destroy main")
         self.destroy()
         _ = OptionsScreen(self.parent)
@@ -143,43 +164,63 @@ class MainScreen(tk.Frame):
         self.after(UPDATE_RATE, self.start_calculations)
 
     def toggle_recording(self):
+        '''
+        toggles between recording and not
+        '''
         global CURRENTLY_RECORDING
+
+        #determine current time to use in recording
         delta = datetime.timedelta(hours=-5)  # only east coast for now lol
         eastern = datetime.timezone(delta)
         time_string = str(GPS.datetime().now(tz=eastern))
         time_string = time_string[5:-16]
-        if CURRENTLY_RECORDING:
+        if CURRENT_SATELLITE is None:
+            logging.warning("cannot record with no satellite")
+        #if we are recording, then stop
+        elif CURRENTLY_RECORDING:
             logging.debug("stop recording")
             os.system(CURRENT_DIR+"stop_recording.sh")
             CURRENTLY_RECORDING = False
         else:
+            #if we aren't recording, then start
             logging.debug("start recording")
             CURRENTLY_RECORDING = True
-            if CURRENT_SATELLITE != None:
-                logging.debug("running command: /home/pi/sat_tracker_gun/start_recording.sh "
-                              + CURRENT_SATELLITE.get_frequency()+" "
-                              + CURRENT_SATELLITE.get_modulation()+" "
-                              + CURRENT_SATELLITE.get_bandwidth()+" "
-                              + time_string+" "
-                              + CURRENT_SATELLITE.get_tle_tuple()[0])
-                os.system(CURRENT_DIR+"start_recording.sh "
-                          + CURRENT_SATELLITE.get_frequency()+" "
-                          + CURRENT_SATELLITE.get_modulation()+" "
-                          + CURRENT_SATELLITE.get_bandwidth()+" "
-                          + time_string+" "
-                          + CURRENT_SATELLITE.get_tle_tuple()[0])
-            else:
-                self.toggle_recording()
+
+            #there is probably still some kind of exploit here.
+            #I am not inclined to fix it at the moment because this device:
+            # 1. stores no personal data
+            # 2. is not connected to the internet
+            # 3. is a hobby project
+            #the cheap sanitation simply prevents simple mistakes by naming a satellite weird
+            # Cayden Wright 12-21-22
+
+            #cheap and lazy way of sanitizing input from text file
+            satellite_name=re.sub("[/\"\';$#=!>|\\\\]","*",CURRENT_SATELLITE.get_tle_tuple()[0])
+            frequency=re.sub("[/\"\';$#=!>|\\\\]","*",CURRENT_SATELLITE.get_frequency())
+            modulation=re.sub("[/\"\';$#=!>|\\\\]","*",CURRENT_SATELLITE.get_modulation())
+            bandwidth=re.sub("[/\"\';$#=!>|\\\\]","*",CURRENT_SATELLITE.get_bandwidth())
+            #form command
+            command = CURRENT_DIR+"start_recording.sh "\
+            +"\""+frequency+"\" "+"\""+modulation+"\" "+"\""+bandwidth+"\" "\
+            +"\""+time_string+"\" "+"\""+satellite_name+"\""
+            #run command if we have a satellite selected
+            logging.debug("running command: "+command)
+            os.system(command)
 
         self.update_record_data()
 
 
 class SatChooserScreen(tk.Frame):
+    '''
+    class to hold satellite choosing screen
+    '''
     def __init__(self, parent, *args, **kwargs):
+        #init boilerplate
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
         logging.debug("initialize sat chooser")
-        # generate buttons based ona TLE file
+
+        # generate buttons based on a TLE file
         self.generate_tle_buttons(CURRENT_DIR+"tle.txt")
         self.pack(fill="both", expand=True)
 
@@ -200,6 +241,7 @@ class SatChooserScreen(tk.Frame):
         with open(tle_file) as tle_file:
             number_of_sats = 0
             for line in tle_file:
+                #magic number is right here
                 if number_of_sats == 7:
                     break
                 if line[0] != 1 and line[0] != 2 and line[0] != "\n":
@@ -234,6 +276,9 @@ class SatChooserScreen(tk.Frame):
 
 
 class OptionsScreen(tk.Frame):
+    '''
+    class to hold options screen
+    '''
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
@@ -277,18 +322,28 @@ class OptionsScreen(tk.Frame):
         self.pack(fill="both", expand=True)
 
     def cancel(self):
+        '''
+        go back to main screen
+        '''
         logging.debug("destroy options")
         self.destroy()
         _ = MainScreen(self.parent)
 
     def recalibrate(self):
+        '''
+        go to calibration screen
+        '''
         logging.debug("destroy options")
         self.destroy()
         _ = InitScreen(self.parent)
 
 
 class InitScreen(tk.Frame):
+    '''
+    initialization/calibration screen
+    '''
     def __init__(self, parent, *args, **kwargs):
+        #init boilerplate
         super().__init__(*args, **kwargs, bg=BG_COLOR)
         self.parent = parent
         gps_text = "Waiting for GPS"
@@ -302,6 +357,7 @@ class InitScreen(tk.Frame):
             bg=BG_COLOR,
             font=FONT_1
         )
+        #place label
         self.gps_status_label.place(relx=0.5, rely=0.2, anchor="s")
         # show GPS fix status
         self.show_gps_status()
@@ -329,23 +385,23 @@ class InitScreen(tk.Frame):
         self.pack(fill="both", expand=True)
 
     def continue_to_main(self):
+        '''
+        goes to main screen
+        '''
         logging.debug("destroy init")
         self.destroy()
         _ = MainScreen(self.parent)
 
     def show_gps_status(self):
+        '''
+        gets GPS status and displays if it's good or not
+        '''
         if GPS.refresh():
             self.gps_status_label.config(text="GPS OK", fg=FG_COLOR)
         else:
             self.gps_status_label.config(text="NO GPS", fg="red")
         self.after(UPDATE_RATE, self.show_gps_status)
         logging.debug("update GPS data for calibration screen")
-
-
-def utc_to_est(utc_dt):
-    fmt = "%Y-%m-%d %H:%M:%S"
-    est_time = utc_dt.astimezone(datetime.timezone('US/Eastern'))
-    return est_time.strftime(fmt)
 
 
 def start_logs():
@@ -355,7 +411,10 @@ def start_logs():
     # if log is over 100MB, delete it and start new
     global CURRENT_DIR
     log_refreshed = False
-    log_size = os.path.getsize(CURRENT_DIR+"sat_tracker.log")
+    try:
+        log_size = os.path.getsize(CURRENT_DIR+"sat_tracker.log")
+    except:
+        log_size=0
     if log_size*100000000 > 100:
         os.remove(CURRENT_DIR+"sat_tracker.log")
         log_refreshed = True

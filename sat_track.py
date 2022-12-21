@@ -20,9 +20,9 @@ class Satellite:
         # create ts object
         satellite = EarthSatellite(tle_1, tle_2, name, ts)
         self.__sat_obj = satellite
-        self.__freq = radio_tuple[0]
-        self.__modulation = radio_tuple[1]
-        self.__bandwidth = radio_tuple[2]
+        self.__freq = str(radio_tuple[0])
+        self.__modulation = str(radio_tuple[1])
+        self.__bandwidth = str(radio_tuple[2])
 
     def recalculate(self, obs_lat, obs_long, datetime_obj):
         '''

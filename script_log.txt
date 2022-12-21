@@ -1,1 +1,0 @@
-gonna run this: /home/pi/sat_tracker_gun/rtl_fm -f 98.1M -M fm -s 250k -r 34k | sox -t raw -e signed-integer -b 16 -c 1 -r 34k - /home/pi/sat_tracker_gun/2022-12-18_00:11:33:091_Metop-B.wav &
