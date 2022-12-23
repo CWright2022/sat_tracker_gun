@@ -168,6 +168,7 @@ class MainScreen(tk.Frame):
         toggles between recording and not
         '''
         global CURRENTLY_RECORDING
+        global CURRENT_SATELLITE
 
         #determine current time to use in recording
         delta = datetime.timedelta(hours=-5)  # only east coast for now lol
@@ -178,8 +179,13 @@ class MainScreen(tk.Frame):
             logging.warning("cannot record with no satellite")
         #if we are recording, then stop
         elif CURRENTLY_RECORDING:
+            frequency=CURRENT_SATELLITE.get_frequency()
+            modulation=CURRENT_SATELLITE.get_modulation()
+            bandwidth=CURRENT_SATELLITE.get_bandwidth()
             logging.debug("stop recording")
             os.system(CURRENT_DIR+"stop_recording.sh")
+            logging.debug("re-initiate playback: "+frequency+" "+modulation+" "+bandwidth)
+            os.system(CURRENT_DIR+"playback.sh "+frequency+" "+modulation+" "+bandwidth)
             CURRENTLY_RECORDING = False
         else:
             #if we aren't recording, then start
@@ -266,10 +272,13 @@ class SatChooserScreen(tk.Frame):
     def set_satellite(self, sat_tuple, radio_tuple):
         '''
         goes back to main screen and sets current satellite
+        also uses playback.sh to let you hear the satellite
         '''
         logging.debug("setting satellite to "+sat_tuple[0])
         global CURRENT_SATELLITE
         CURRENT_SATELLITE = sat_track.Satellite(sat_tuple, radio_tuple)
+        logging.debug("starting playback: "+radio_tuple[0]+" "+radio_tuple[1]+" "+radio_tuple[2])
+        os.system(CURRENT_DIR+"playback.sh "+radio_tuple[0]+" "+radio_tuple[1]+" "+radio_tuple[2])
         logging.debug("destroy sat chooser")
         self.destroy()
         _ = MainScreen(self.parent)
