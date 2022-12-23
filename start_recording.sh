@@ -16,6 +16,6 @@ FILENAME=${SAT_NAME}_${DATETIME}
 
 # echo "gonna run this: /home/pi/sat_tracker_gun/rtl_fm -f $FREQ -M $MODULATION -s $BANDWIDTH -r 34k | sox -t raw -e signed-integer -b 16 -c 1 -r 34k - /home/pi/sat_tracker_gun/$FILENAME.wav &" > script_log.txt
 
-/home/pi/sat_tracker_gun/rtl_fm -f $FREQ -M $MODULATION -s $BANDWIDTH -r 34k | sox -t raw -e signed-integer -b 16 -c 1 -r 34k - /home/pi/sat_tracker_gun/"${FILENAME}".wav &
+/home/pi/sat_tracker_gun/rtl_fm -f $FREQ -M $MODULATION -s $BANDWIDTH -r 34k | tee >(sox -t raw -e signed-integer -b 16 -c 1 -r 34k - /home/pi/sat_tracker_gun/"${FILENAME}".wav &) | play -r 32k -t raw -e s -b 16 -c 1 -V1 - &
 
 # ./rtl_fm.exe -M $MODULATION -f $FREQ -r 34k -w $BANDWIDTH | ./sox.exe -t raw -e signed-integer -b 16 -c 1 -r 34k - test.wav

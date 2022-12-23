@@ -13,7 +13,7 @@ RUN INSTALL.SH (sudo bash install.sh)
     install ImageTk part of PIL (apt-get install python3-pil.imagetk)
     install x server (apt-get install xserver-xorg)
     install x init (apt-get install xinit)
-    install openbox
+    install openbox (apt-get install openbox)
     blacklist kernel module (echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist.conf)
     reboot (reboot now)
     do the stuff in the link https://raspberrypi.stackexchange.com/questions/52099/using-openbox-to-autostart-gui-application-raspberry-pi-3
