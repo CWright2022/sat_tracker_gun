@@ -17,7 +17,11 @@ RUN INSTALL.SH (sudo bash install.sh)
     blacklist kernel module (echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist.conf)
     reboot (reboot now)
     do the stuff in the link https://raspberrypi.stackexchange.com/questions/52099/using-openbox-to-autostart-gui-application-raspberry-pi-3
-
+    do this stuff: https://singleboardbytes.com/637/how-to-fast-boot-raspberry-pi.htm
+        disable splash
+        disable bluetooth
+        disable wireless? idk maybe soon
+        boot_delay=0
 
 
 
