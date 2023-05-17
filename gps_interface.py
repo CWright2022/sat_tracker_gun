@@ -59,7 +59,12 @@ class GPS_module:
         return self.__long
 
     def datetime(self):
-        return self.__datetime
+        print(self.__datetime)
+        if self.__datetime != None:
+        	return self.__datetime
+        else:
+                print("datetime is null")
+                return self.__datetime
 
 
 def interpret_lat_long(lat, lat_direction, long, long_direction):
